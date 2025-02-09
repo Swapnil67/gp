@@ -1,5 +1,8 @@
 main
 gp
+test.c
+playground.c
+output
 
 .vscode
 *.dSYM

@@ -1,3 +1,4 @@
+#include<assert.h>
 #include<stdio.h>
 #include <SDL.h>
 
@@ -9,8 +10,50 @@
 
 #define AGENTS_COUNT 5
 
+#define BACKGROUND_COLOR     "353535"
+#define GRID_COLOR           "748CAB"
+
 #define CELL_WIDTH ((float)SCREEN_WIDTH / BOARD_WIDTH)
 #define CELL_HEIGHT ((float)SCREEN_HEIGHT / BOARD_HEIGHT)
+
+int scc(int code) {
+	if(code < 0) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		exit(1);
+	}
+	return 0;
+}
+
+void *scp(void *ptr) {
+	if(ptr == NULL) {
+		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
+		exit(1);
+	}	
+	return ptr;
+}
+
+Uint8 hex_to_dec(char x) {
+	if('0' <= x && x <= '9') return x - '0';
+	if('a' <= x && x <= 'z') return x - 'a' + 10;
+	if('A' <= x && x <= 'Z') return x - 'A' + 10;
+	printf("ERROR: Incorrect hex character %c\n", x);
+	exit(1);
+}
+
+Uint8 parse_hex_byte(const char *byte_hex) {
+	return hex_to_dec(*byte_hex) * 0x10 + hex_to_dec(*(byte_hex + 1));
+}
+
+void sdl_set_color_hex(SDL_Renderer *renderer, const char *hex) {
+	size_t hex_len =  strlen(hex);
+	assert(hex_len == 6);
+	scc(SDL_SetRenderDrawColor(
+			renderer,
+			parse_hex_byte(hex),
+			parse_hex_byte(hex + 2),
+			parse_hex_byte(hex + 4),
+			255));
+}
 
 typedef enum {
 	DIR_RIGHT = 0,
@@ -35,24 +78,8 @@ typedef enum {
 
 Agent agents[AGENTS_COUNT];
 
-int scc(int code) {
-	if(code < 0) {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
-		exit(1);
-	}
-	return 0;
-}
-
-void *scp(void *ptr) {
-	if(ptr == NULL) {
-		fprintf(stderr, "SDL error: %s\n", SDL_GetError());
-		exit(1);
-	}	
-	return ptr;
-}
-
 void render_grid(SDL_Renderer *renderer) {
-	scc(SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255));
+	sdl_set_color_hex(renderer, GRID_COLOR);
 	// * Draw Columns
 	for (int x = 1; x < BOARD_WIDTH; ++x) {
 		scc(SDL_RenderDrawLine(
@@ -98,6 +125,16 @@ void init_agents(void) {
 	}
 }
 
+void render_agent(SDL_Renderer *renderer, Agent agents) {
+	// SDL_SetRenderDrawColor(renderer, 150)
+}
+
+void render_all_agents(SDL_Renderer *renderer) {
+	for (size_t i = 0; i < AGENTS_COUNT; ++i) {
+		render_agent(renderer, agents[i]);
+	}
+}
+
 int main() {
 	printf("Genetic Programming\n");
 	scc(SDL_Init(SDL_INIT_VIDEO));
@@ -132,7 +169,7 @@ int main() {
 			}
 		}
 
-		scc(SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255));
+		sdl_set_color_hex(renderer, BACKGROUND_COLOR);
 		scc(SDL_RenderClear(renderer));
 
 		render_grid(renderer);
